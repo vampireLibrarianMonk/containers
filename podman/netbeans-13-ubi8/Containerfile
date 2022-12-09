@@ -1,0 +1,45 @@
+# Run the following command after build
+## podman run -it --name firefox --net=host --privileged -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:rw ${IMAGE} ${CMD}
+# We are going to use the Latest version of Centos
+FROM registry.access.redhat.com/ubi8/ubi
+
+# Install A collection of common X Window System applications 
+##(https://itsjustbytes.wordpress.com/2020/09/10/installing-x11-packages-on-centos-8/)
+## https://medium.com/codex/running-gui-applications-in-docker-firefox-nautilus-file-manager-5424694104ec
+### xorg-x11-server-Xorg xorg-x11-xauth xorg-x11-apps 
+RUN yum install -y xauth \
+	# Setting up the SSH server (X11 forwarding source)
+	## (https://access.redhat.com/solutions/1117863)
+	&& dnf install -y xorg-x11-xauth xorg-x11-fonts-* xorg-x11-utils dbus-x11 \
+
+# Web-based stuff
+	&& yum install -y curl wget \
+
+# Archived based stuff
+	&& yum install -y unzip \
+
+# Install firefox and supporting packages (https://medium.com/geekculture/run-a-gui-software-inside-a-docker-container-dce61771f9)
+	&& yum install -y dbus-x11 PackageKit-gtk3-module libcanberra-gtk2 firefox \
+
+# Netbeans dependency
+	&& yum install -y which \
+
+# Netbeans dependency
+	## OpenJDK 8
+	&& yum install -y java-1.8.0-openjdk-devel \
+
+# Generating a universally unique ID for the Container
+	&& dbus-uuidgen > /etc/machine-id
+
+# Download netbeans, unzip and clean up
+RUN wget --quiet https://archive.apache.org/dist/netbeans/netbeans/13/netbeans-13-bin.zip && unzip netbeans-13-bin.zip -qq && rm -f netbeans-13-bin.zip
+
+# File manager?
+## https://snapcraft.io/install/nautilusfilemanager/centos
+
+# Clean up (https://www.thegeekdiary.com/how-to-clean-yum-cache-in-centos-rhel/)
+RUN yum clean all 
+
+# Starting Firefox application
+CMD netbeans/bin/netbeans
+
